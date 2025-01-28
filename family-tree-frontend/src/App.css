@@ -1,0 +1,114 @@
+.tree-node {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.node-circle {
+  fill: orange; /* Green color for nodes */
+  stroke: orange; /* Darker border */
+  stroke-width: 2;
+  transition: all 0.3s ease; /* Smooth hover effect */
+}
+
+.node-circle:hover {
+  fill: white; /* Lighter green on hover */
+  stroke: black; /* Even darker border */
+}
+
+.node-name {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: normal;
+  fill: #212121; /* Dark text color */
+}
+
+.edit-btn, .delete-btn {
+  cursor: pointer;
+  transition: fill 0.3s;
+  pointer-events: auto; /* Allow buttons to be clickable */
+}
+
+.edit-btn:hover, .delete-btn:hover {
+  fill: darkgray;
+}
+.tree-node:hover .node-name {
+  fill: #f57c00; /* Highlight name on hover */
+}
+
+.link {
+  fill: none;
+  stroke: #b6babc; /* Cool grey for links */
+  stroke-width: 1;
+  stroke-dasharray: 3; /* Dashed lines */
+  transition: stroke 0.3s ease; /* Smooth transition */
+}
+
+.link:hover {
+  stroke: #0288d1; /* Blue on hover */
+}
+
+.edit-btn, .delete-btn {
+  fill: #eeeeee;
+  stroke: red;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+  fill: #ffccbc; /* Light orange on hover */
+  stroke: #f44336; /* Red border */
+}
+
+.text-button {
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  fill: #212121;
+}
+
+.text-button:hover {
+  fill: #f44336; /* Red text on hover */
+}
+.tree-container {
+  background: linear-gradient(to bottom, #e3f2fd, #ffffff); /* Subtle blue gradient */
+  padding: 20px;
+  border: 2px solid #90caf9; /* Border for the tree area */
+  border-radius: 10px;
+}
+.node {
+  transition: transform 0.5s ease;
+}
+
+.node:hover {
+  transform: scale(1.1); /* Slightly enlarge node on hover */
+}
+
+.link {
+  transition: stroke-dashoffset 0.5s ease;
+}
+.tree-container {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.tree-node text {
+  font-size: calc(12px + 0.5vw); /* Scale text size based on viewport */
+}
+.node-id {
+  font-family: Arial, sans-serif;
+  font-size: 50px;
+  fill: gray;
+  opacity: 0.8;
+}
+.node-id:hover {
+  fill: black; /* Make it bold on hover */
+  opacity:2;
+}
+.rd3t-node,.rd3t-leaf-node {
+  stroke:none !important;
+}
+.edit-id,.delete-id{
+  color:black !important;
+}
+.rd3t-link{
+  stroke: #666 !important;
+}
