@@ -165,7 +165,7 @@ const fetchFamilyTree = async () => {
   };
 */}
 
-
+{/*
   // Export the tree as an image
   const exportToImage = () => {
     setTimeout(() => {
@@ -212,17 +212,17 @@ const fetchFamilyTree = async () => {
     }, 100);
   };
 
-  
+  */}
 
   return (
     <div style={{ width: "100vw", height: "200vh" }}>
      
-      {/* Export Buttons */}
+      {/* Export Buttons
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
         <button onClick={exportToImage}>Export as Image</button>
         <button onClick={exportToPDF}>Export as PDF</button>
       </div>
-
+    */}
       {/* Tree Visualization */}
       <div
         id="treeWrapper"
