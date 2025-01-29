@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Tree from "react-d3-tree";
+import * as htmlToImage from "html-to-image";
+import { jsPDF } from "jspdf";
 import './App.css';  // Import the external CSS file for better styling
 import { createClient } from '@supabase/supabase-js';
 
