@@ -4,6 +4,8 @@ import axios from "axios";
 import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
 import './App.css';  // Import the external CSS file for better styling
+import { createClient } from '@supabase/supabase-js';
+
 
 const App = () => {
   const [familyTree, setFamilyTree] = useState([]);
@@ -13,15 +15,23 @@ const App = () => {
   const [avatar, setAvatar] = useState({});  // Store avatar images for nodes
   const treeWrapperRef = useRef(null);
 
-  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+  //console.log(process.env.REACT_APP_TEST_VARIABLE);
+
+  //const supabase = process.env.REACT_APP_API_BASE_URL;
+ 
+  const supabase = createClient(
+    "https://hjlmluiixkjifyjvvfch.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqbG1sdWlpeGtqaWZ5anZ2ZmNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNDUwNTEsImV4cCI6MjA1MzYyMTA1MX0.-ejoMpgS1odUzqSGaXpd00Sd6h7MO_3K3bLW4qVfJxs"
+  );
 
   useEffect(() => {
     fetchFamilyTree();
   }, []);
 
+  {/*}
   const fetchFamilyTree = () => {
     
-    axios.get(`${apiBaseUrl}/api/family`).then((response) => {
+    axios.get(`${supabase}/api/family`).then((response) => {
       const treeData = buildTree(response.data);
        // Map avatar URLs by node ID
         const avatarMap = response.data.reduce((acc, member) => {
@@ -35,6 +45,24 @@ const App = () => {
       setAvatar(avatarMap); // Update the avatar mapping
     });
   };
+*/}
+
+const fetchFamilyTree = async () => {
+  const { data, error } = await supabase.from("family_tree1").select("*");
+  if (error) {
+    console.error("Error fetching family tree:", error);
+  } else {
+    const treeData = buildTree(data); // Ensure buildTree is implemented
+    const avatarMap = data.reduce((acc, member) => {
+      if (member.avatar) {
+        acc[member.id] = member.avatar;
+      }
+      return acc;
+    }, {});
+    setFamilyTree(treeData);
+    setAvatar(avatarMap);
+  }
+};
 
   // Build hierarchical tree structure from flat data
   const buildTree = (data, parentId = null) => {
@@ -49,11 +77,11 @@ const App = () => {
       }));
   };
 
-  // Add new member to the family tree
+ {/* // Add new member to the family tree
   const handleAddMember = () => {
     if (newMember.name) {
       axios
-        .post(`${apiBaseUrl}/api/family`, newMember)
+        .post(`${supabase}/api/family`, newMember)
         .then(() => {
           setNewMember({ name: "", parent_id: null });
           fetchFamilyTree();
@@ -68,7 +96,7 @@ const App = () => {
   const handleEditMember = () => {
     if (editingMember.name) {
       axios
-        .put(`${apiBaseUrl}/api/family/${editingMember.id}`, editingMember)
+        .put(`${supabase}/api/family/${editingMember.id}`, editingMember)
         .then(() => {
           setEditingMember(null);
           fetchFamilyTree();
@@ -78,7 +106,107 @@ const App = () => {
         });
     }
   };
+*/}
 
+  const handleAddMember = async () => {
+    if (newMember.name) {
+      try {
+        // Insert the new member into the 'family_tree' table
+        const { error } = await supabase
+          .from('family_tree1')
+          .insert([{ name: newMember.name, parent_id: newMember.parent_id || null }]);
+  
+        if (error) {
+          console.error('Error adding new member:', error.message);
+        } else {
+          // Reset the form and fetch the updated family tree
+          setNewMember({ name: "", parent_id: null });
+          fetchFamilyTree();
+        }
+      } catch (err) {
+        console.error('Unexpected error adding new member:', err);
+      }
+    }
+  };
+
+  // Edit an existing member
+const handleEditMember = async () => {
+  if (editingMember?.name) {
+    try {
+      // Update the existing member in the 'family_tree' table
+      const { error } = await supabase
+        .from('family_tree1')
+        .update({
+          name: editingMember.name,
+          parent_id: editingMember.parent_id || null, // Update parent_id, or set it to null
+        })
+        .eq('id', editingMember.id); // Specify the row to update by ID
+
+      if (error) {
+        console.error("Error editing member:", error.message);
+      } else {
+        // Reset the editing state and fetch the updated family tree
+        setEditingMember(null);
+        fetchFamilyTree();
+      }
+    } catch (err) {
+      console.error("Unexpected error editing member:", err);
+    }
+  }
+};
+
+const handleAvatarUpload = async (e, nodeId) => {
+  const file = e.target.files[0];
+  if (file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    formData.append('name', editingMember.name);
+    formData.append('parent_id', editingMember.parent_id || '');
+
+    // If editing a member, handle avatar upload
+    if (nodeId) {
+      try {
+        // Step 1: Upload the avatar image to Supabase Storage
+        const { data, error: uploadError } = await supabase
+          .storage
+          .from('avatars') // specify the bucket name
+          .upload(`${file.name}`, file, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error('Error uploading avatar:', uploadError.message);
+          return;
+        }
+
+        // Step 2: Update the family member's avatar URL in the database
+        const avatarUrl = data?.Key ? `https://hjlmluiixkjifyjvvfch.supabase.co/storage/v1/object/avatars/${data.Key}` : null;
+
+        // Update the member's avatar in the `family_tree` table
+        const { error: updateError } = await supabase
+          .from('family_tree1')
+          .update({ avatar: avatarUrl })
+          .eq('id', nodeId);
+
+        if (updateError) {
+          console.error('Error updating member avatar:', updateError.message);
+          return;
+        }
+
+        // Step 3: Refresh the family tree after the update
+        fetchFamilyTree();
+
+      } catch (err) {
+        console.error('Error handling avatar upload:', err);
+      }
+    }
+  }
+};
+
+
+
+{/*
   // Avatar upload handler
   const handleAvatarUpload = (e, nodeId) => {
     const file = e.target.files[0];
@@ -93,7 +221,7 @@ const App = () => {
         // If editing a member, send avatar with the PUT request
         if (nodeId) {
           axios
-          .put(`${apiBaseUrl}/api/family/${nodeId}`, formData, {
+          .put(`${supabase}/api/family/${nodeId}`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
@@ -115,11 +243,12 @@ const App = () => {
       reader.readAsDataURL(file);
     }
   };
-
+*/}
+  {/*
   // Delete a member from the family tree
   const handleDeleteMember = (id) => {
     axios
-      .delete(`${apiBaseUrl}/api/family/${id}`)
+      .delete(`${supabase}/api/family/${id}`)
       .then(() => {
         fetchFamilyTree();
       })
@@ -127,6 +256,26 @@ const App = () => {
         console.error("Error deleting member:", err);
       });
   };
+*/}
+// Delete a member from the family tree
+const handleDeleteMember = async (id) => {
+  try {
+    // Delete the member and its descendants from the 'family_tree' table
+    const { error } = await supabase
+      .from('family_tree1')
+      .delete()
+      .or(`id.eq.${id},parent_id.eq.${id}`); // Deletes the member and its children
+
+    if (error) {
+      console.error("Error deleting member:", error.message);
+    } else {
+      // Refresh the family tree after successful deletion
+      fetchFamilyTree();
+    }
+  } catch (err) {
+    console.error("Unexpected error deleting member:", err);
+  }
+};
 
   // Export the tree as an image
   const exportToImage = () => {
